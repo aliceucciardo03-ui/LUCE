@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Luce — scrivi ciò che non hai detto</title>
+<style>
+:root{--bg:#fbf3e4;--fg:#2b2218;--mut:#7a6a55;--card:#fffaf0;--line:#e3d3b5;--acc:#d9822b;--accfg:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17120d;--fg:#f4e9d6;--mut:#b5a58c;--card:#221a12;--line:#3a2e20;--acc:#f0a24a;--accfg:#1a1208}}
+:root[data-theme="dark"]{--bg:#17120d;--fg:#f4e9d6;--mut:#b5a58c;--card:#221a12;--line:#3a2e20;--acc:#f0a24a;--accfg:#1a1208}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:Georgia,"Times New Roman",serif;min-height:100vh;display:flex;justify-content:center}
+main{width:100%;max-width:520px;padding:32px 20px 40px}
+.sun{width:72px;height:72px;border-radius:50%;margin:0 auto 18px;background:radial-gradient(circle,var(--acc) 0%,transparent 70%);box-shadow:0 0 40px var(--acc)}
+h1{font-size:2rem;text-align:center;margin:0 0 6px;letter-spacing:.05em}
+p.sub{text-align:center;color:var(--mut);margin:0 0 24px;line-height:1.5}
+label{display:block;font-size:.9rem;color:var(--mut);margin:14px 0 6px}
+input,textarea{width:100%;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;font-size:1rem}
+textarea{min-height:170px;resize:vertical}
+button{margin-top:18px;width:100%;background:var(--acc);color:var(--accfg);border:0;border-radius:999px;padding:14px;font:inherit;font-size:1.05rem;cursor:pointer}
+button:disabled{opacity:.5}
+#done{display:none;text-align:center;line-height:1.6}
+#note{color:var(--mut);font-size:.85rem;text-align:center;margin-top:12px;min-height:1.2em}
+</style>
+</head>
+<body>
+<main>
+  <div class="sun"></div>
+  <h1>Luce</h1>
+  <p class="sub">Una frase, una lettera, qualcosa che non hai mai detto.<br>Scrivila qui: la porteremo alla cassetta delle lettere.</p>
+  <section id="form">
+    <label for="to">Per chi è? (facoltativo)</label>
+    <input id="to" maxlength="80" placeholder="Un nome, un soprannome, “a te”…">
+    <label for="msg">Il tuo messaggio</label>
+    <textarea id="msg" maxlength="2000" placeholder="Scrivi qui…"></textarea>
+    <label for="from">Firma (facoltativa)</label>
+    <input id="from" maxlength="80" placeholder="Anonimo, se preferisci">
+    <button id="send">Invia</button>
+    <div id="note"></div>
+  </section>
+  <section id="done">
+    <h2>Grazie.</h2>
+    <p>Il tuo messaggio è stato inviato.<br>Ora è nella cassetta delle lettere.</p>
+    <button id="again">Scrivine un altro</button>
+  </section>
+</main>
+<script>
+// 1) Crea un modulo su formspree.io e incolla qui il suo indirizzo, es. "https://formspree.io/f/abcdwxyz"
+var ENDPOINT = "https://formspree.io/f/meaaynpg";
+var $ = function(id){return document.getElementById(id)};
+function showDone(){ $("form").style.display="none"; $("done").style.display="block"; }
+$("again").onclick = function(){
+  $("msg").value=""; $("to").value=""; $("from").value="";
+  $("done").style.display="none"; $("form").style.display="block"; $("note").textContent="";
+};
+$("send").onclick = async function(){
+  var msg = $("msg").value.trim();
+  if(!msg){ $("note").textContent = "Scrivi prima qualcosa."; return; }
+  $("send").disabled = true; $("note").textContent = "Invio in corso…";
+  try{
+    var r = await fetch(ENDPOINT, {
+      method:"POST",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body: JSON.stringify({destinatario:$("to").value.trim()||"—", messaggio:msg, firma:$("from").value.trim()||"Anonimo"})
+    });
+    if(r.ok){ showDone(); }
+    else { throw new Error("http "+r.status); }
+  }catch(e){
+    $("note").textContent = "Non è stato possibile inviare. Riprova o usa la cassetta di carta.";
+    $("send").disabled = false;
+  }
+};
+</script>
+</body>
+</html>
